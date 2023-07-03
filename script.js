@@ -1,5 +1,5 @@
-const createPlayer = (marker) => {
-  return {marker};
+const createPlayer = (name, marker) => {
+  return {name, marker};
 }
 
 const gameBoard = (() => {
@@ -17,17 +17,19 @@ const gameBoard = (() => {
 
   const checkWin = () => {
     // check rows
-    console.log("checking rows");
     for (let i = 0; i < size; i++) {
-      if (grid[i][0] === grid[i][1] && grid[i][0] === grid[i][2]) {
+      if (grid[i][0] &&
+          grid[i][0] === grid[i][1] &&
+          grid[i][0] === grid[i][2]) {
         return grid[i][0];
       }
     }
     
     // check columns
-    console.log("checking columns");
     for (let j = 0; j < size; j++) {
-      if (grid[0][j] === grid[1][j] && grid[0][j] === grid[2][j]) {
+      if (grid[0][j] &&
+          grid[0][j] === grid[1][j] &&
+          grid[0][j] === grid[2][j]) {
         return grid[0][j];
       }
     }
@@ -46,7 +48,7 @@ const gameBoard = (() => {
   const checkTie = () => {
     for (let i = 0; i < size; i++) {
       for (let j = 0; j < size; j++) {
-        if (grid[i][j]) {
+        if (!grid[i][j]) {
           return false;
         }
       }
@@ -96,21 +98,24 @@ const gameBoard = (() => {
 })();
 
 const game = (() => {
-  const playerX = createPlayer("╳");
-  const playerO = createPlayer("◯");
+  const playerX = createPlayer("X", "╳");
+  const playerO = createPlayer("O", "◯");
   let currentPlayer = playerX;
   let gameOver = false;
+  const restartButton = document.querySelector(".button#restart");
+  const infoText = document.querySelector(".info");
+
+  restartButton.addEventListener("click", () => newGame());
 
   const newGame = () => {
     gameBoard.reset();
     gameBoard.drawBoard();
     currentPlayer = playerX;
     gameOver = false;
+    infoText.textContent = `${currentPlayer.name}'s turn`;
   };
 
   const nextMove = (x, y) => {
-    console.log("processing next move");
-
     // check if somebody has already won
     if (gameOver) {
       return
@@ -125,22 +130,30 @@ const game = (() => {
     gameBoard.drawBoard();
 
     // check for winner
-    winner = gameBoard.checkWin();
-    console.log(winner);
-    if (winner) {
+    let winnerMarker = gameBoard.checkWin();
+    if (winnerMarker) {
+      const winnerPlayer = (winnerMarker === playerO.marker ? playerO : playerX);
+      infoText.textContent = `${winnerPlayer.name} wins!`
       gameOver = true;
+      return;
     }
 
     // check for tie
     if (gameBoard.checkTie()) {
+      infoText.textContent = "It's a tie!"
       gameOver = true;
+      return;
     }
 
+    // switch current player
     if (currentPlayer === playerX) {
       currentPlayer = playerO;
     } else {
       currentPlayer = playerX;
     }
+
+    // display next (new current) player
+    infoText.textContent = `${currentPlayer.name}'s turn`;
   }
 
   return {
